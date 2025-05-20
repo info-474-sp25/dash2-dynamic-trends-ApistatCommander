@@ -23,8 +23,16 @@ const svg2_RENAME = d3.select("#lineChart2")
 
 // 2.a: LOAD...
 d3.csv("aircraft_incidents.csv").then(data => {
-    console.log(data);
+
     // 2.b: ... AND TRANSFORM DATA
+
+
+    data.forEach(d => {
+        d.year = +d.year;
+        d.fatalities = +d.Total_Fatal_Injuries;
+    });
+
+    console.log(data);    
 
     // 3.a: SET SCALES FOR CHART 1
 
@@ -39,25 +47,6 @@ d3.csv("aircraft_incidents.csv").then(data => {
 
 
     // 7.a: ADD INTERACTIVITY FOR CHART 1
-    
-
-    // ==========================================
-    //         CHART 2 (if applicable)
-    // ==========================================
-
-    // 3.b: SET SCALES FOR CHART 2
-
-
-    // 4.b: PLOT DATA FOR CHART 2
-
-
-    // 5.b: ADD AXES FOR CHART 
-
-
-    // 6.b: ADD LABELS FOR CHART 2
-
-
-    // 7.b: ADD INTERACTIVITY FOR CHART 2
 
 
 });
