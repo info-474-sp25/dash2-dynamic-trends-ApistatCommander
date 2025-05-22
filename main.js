@@ -26,13 +26,37 @@ d3.csv("aircraft_incidents.csv").then(data => {
 
     // 2.b: ... AND TRANSFORM DATA
 
-
+    //reformat data
     data.forEach(d => {
         d.year = +d.year;
         d.fatalities = +d.Total_Fatal_Injuries;
     });
 
-    console.log(data);    
+    // console.log(data);    
+
+    //clean data
+    const cleanData = data.filter(d => d.fatalities != null
+        && d.year != null
+    );
+
+    // console.log("cleaned data: ", cleanData);
+
+    //group by and summarize (aggregate fatalities by year)
+    const dataMap = d3.rollup(cleanData, 
+        v => d3.sum(v, d => d.fatalities),
+        d => d.year
+    );
+
+    // console.log("data map: ", dataMap);
+
+    //convert to array and sort by year
+    const dataArr = Array.from(dataMap,
+        ([year, fatalities]) => ({year, fatalities})
+
+    )
+        .sort((a,b) => a.year - b.year)
+    ;
+    console.log("year and deaths: ", dataArr);
 
     // 3.a: SET SCALES FOR CHART 1
 
