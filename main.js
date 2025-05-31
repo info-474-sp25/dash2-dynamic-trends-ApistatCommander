@@ -11,15 +11,7 @@ const svgLine = d3.select("#lineChart1") // If you change this ID, you must chan
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-// const svg2_RENAME = d3.select("#lineChart2")
-//     .append("svg")
-//     .attr("width", width + margin.left + margin.right)
-//     .attr("height", height + margin.top + margin.bottom)
-//     .append("g")
-//     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-// (If applicable) Tooltip element for interactivity
-// const tooltip = ...
 
 // 2.a: LOAD...
 d3.csv("aircraft_incidents.csv").then(data => {
@@ -32,14 +24,12 @@ d3.csv("aircraft_incidents.csv").then(data => {
         d.fatalities = +d.Total_Fatal_Injuries;
     });
 
-    // console.log(data);    
 
     //clean data
     const cleanData = data.filter(d => d.fatalities != null
         && d.year != null
     );
 
-    // console.log("cleaned data: ", cleanData);
 
     //group by and summarize (aggregate fatalities by year)
     const dataMap = d3.rollup(cleanData, 
@@ -47,7 +37,6 @@ d3.csv("aircraft_incidents.csv").then(data => {
         d => d.year
     );
 
-    // console.log("data map: ", dataMap);
 
     //convert to array and sort by year
     const dataArr = Array.from(dataMap,
@@ -56,7 +45,6 @@ d3.csv("aircraft_incidents.csv").then(data => {
     )
         .sort((a,b) => a.year - b.year)
     ;
-    console.log("year and deaths: ", dataArr);
 
     // 3.a: SET SCALES FOR CHART 1
        let xYear = d3.scaleLinear()
@@ -117,10 +105,124 @@ d3.csv("aircraft_incidents.csv").then(data => {
         .attr("transform", "rotate(-90)")
         .attr("y", (-margin.left / 2) - 10)
         .attr("x", -height / 2)
-        .text("Fatalities ($)")
+        .text("Fatal Injuries")
     ;
 
     // 7.a: ADD INTERACTIVITY FOR CHART 1
+
+    //Tool Tip
+     const tooltip = d3.select("body") // Create tooltip
+        .append("div")
+        .attr("class", "tooltip")
+        .style("position", "absolute")
+        .style("visibility", "hidden")
+        .style("background", "rgba(0, 0, 0, 0.7)")
+        .style("color", "white")
+        .style("padding", "10px")
+        .style("border-radius", "5px")
+        .style("font-size", "12px");
+
+    svgLine.selectAll(".data-point") // Create tooltip events
+        .data(dataArr) // Bind on the data array
+        .enter()
+        .append("circle")
+        .attr("class", "data-point")
+        .attr("cx", d => xYear(d.year))
+        .attr("cy", d => yFatalities(d.fatalities))
+        .attr("r", 10)
+        .style("fill", "steelblue")
+        .style("opacity", 0)  // Make circles invisible by default
+        // --- MOUSEOVER ---
+        .on("mouseover", function(event, d) {
+            tooltip.style("visibility", "visible")
+                .html(`<strong>Year:</strong> ${d.year} <br><strong>Fatalities:</strong> ${d.fatalities}`)
+                .style("top", (event.pageY + 10) + "px") // Position relative to pointer
+                .style("left", (event.pageX + 10) + "px");
+
+            // Create the large circle at the hovered point
+            svgLine.append("circle")
+                .attr("class", "hover-circle")
+                .attr("cx", xYear(d.year))  // Position based on the year
+                .attr("cy", yFatalities(d.fatalities)) // Position based on the fatalities
+                .attr("r", 6)  // Radius of the large circle
+                .style("fill", "steelblue") // Circle color
+                .style("stroke-width", 2);
+        })
+        // Mouse Out 
+        .on("mouseout", function() {
+            tooltip.style("visibility", "hidden");
+
+            // Remove the hover circle when mouseout occurs
+            svgLine.selectAll(".hover-circle").remove();
+
+            // Make the circle invisible again
+            d3.select(this).style("opacity", 0);  // Reset opacity to 0 when not hovering
+        });
+    
+    //Trendline
+
+    //Linear Regression
+    function linearRegression(data) {
+        const n = data.length;
+        const sumX = d3.sum(data, d => d.year);
+        const sumY = d3.sum(data, d => d.fatalities);
+        const sumXY = d3.sum(data, d => d.year * d.fatalities);
+        const sumX2 = d3.sum(data, d => d.year * d.year);
+
+        // Calculate slope (m) and intercept (b)
+        const m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        const b = (sumY - m * sumX) / n;
+
+        // Generate points for the trendline
+        const trendlineData = data.map(d => ({
+            year: d.year,
+            count: m * d.year + b
+        }));
+
+        return trendlineData;
+    };
+
+    //Draw trendline once checked
+    function drawTrendline() {
+
+
+        // Calculate trendline
+        const trendlineData = linearRegression(dataArr);
+
+        // Remove the previous trendline if it exists
+        svgLine.selectAll(".trendline").remove();
+
+        //Draw trendline based on data
+        svgLine.append("path")
+            .data([trendlineData])
+            .attr("class", "trendline")
+            .attr("d", d3.line()
+                .x(d => xYear(d.year))
+                .y(d => yFatalities(d.count))
+            )
+            .attr("fill", "none")
+            .attr("stroke", "red")
+            .attr("stroke-width", 2)
+            .attr("stroke-dasharray", "5,5");
+
+    }
+
+    //draw trendline
+    // drawTrendline();
+
+    //Toggle Trendline
+     d3.select("#trendline-toggle").on("change", function() {
+        // Get state
+        const isChecked = d3.select(this).property("checked"); 
+        // Create trendline based on state
+        if (isChecked) {
+            drawTrendline();
+        } else {
+            svgLine.selectAll(".trendline").remove();
+        }
+
+    });
+
 
 
 });
