@@ -52,7 +52,8 @@ d3.csv("aircraft_incidents.csv").then(data => {
         .range([0, width]); // START low, INCREASE
 
     let yFatalities = d3.scaleLinear()
-        .domain([0, d3.max(dataArr, d => d.fatalities)])
+        // .domain([0, d3.max(dataArr, d => d.fatalities)])
+         .domain([0, 1100])
         .range([height,0]); // START high, DECREASE
 
 
@@ -88,7 +89,7 @@ d3.csv("aircraft_incidents.csv").then(data => {
         .attr("x", width / 2)
         .attr("y", -margin.top / 2)
         .attr("text-anchor", "middle")
-        .text("Total Fatal Injuries in Airline Incidents (1995 - 2016)");
+        .text("Total Fatal Injuries (1995 - 2016)");
 
     //x-axis
         svgLine.append("text")
@@ -144,7 +145,7 @@ d3.csv("aircraft_incidents.csv").then(data => {
                 .attr("class", "hover-circle")
                 .attr("cx", xYear(d.year))  // Position based on the year
                 .attr("cy", yFatalities(d.fatalities)) // Position based on the fatalities
-                .attr("r", 6)  // Radius of the large circle
+                .attr("r", 8)  // Radius of the large circle
                 .style("fill", "steelblue") // Circle color
                 .style("stroke-width", 2);
         })
@@ -201,7 +202,7 @@ d3.csv("aircraft_incidents.csv").then(data => {
                 .y(d => yFatalities(d.count))
             )
             .attr("fill", "none")
-            .attr("stroke", "red")
+            .attr("stroke", "gray")
             .attr("stroke-width", 2)
             .attr("stroke-dasharray", "5,5");
 
